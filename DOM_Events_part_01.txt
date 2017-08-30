@@ -1,0 +1,462 @@
+1. Додавання обробника подій для вузла (файл artists.html).
+
+	Необхідно створити вузол, ціллю якого буде права область з художниками
+
+	Потім необхідно додати обробник для вузла, що буде слідкувати за кліками
+
+	Якщо на одному з зображень було "клікнуто", має виконатись певний код
+
+
+	Створюємо функцію, що сама виконується і захистити локальні змінні від "всієї решти", що виконується на сторінці
+
+		(function() {
+			// Код
+		})();
+
+	Створюємо змінну і обираємо вузол
+
+		var myNode = document.querySelector('#artlist .pixgrid ul');
+
+	Після того, як вузол вказано, можна додати обробник подій
+
+		myNode.addEventListener("click", function(e) {
+			// Код
+		}, false);
+
+	Треба відслідкувати тільки клік на зображенні
+
+		if (e.target.tagName === 'IMG') {
+			console.log(e);
+		}
+
+
+	Таким чином, подія відбувається лише тоді, коли клікнути всередині невпорядкованого списку
+
+	І за допомогою створення вузла можна дуже точно звернутись до елементу, що знаходиться всередині цього вузла
+
+
+2. Створення оверлея за допомогою JS.
+
+	Створюємо новий елемент div у документі
+
+		var myOverlay = document.createElement('div');
+
+	Щоб полегшити процедуру звернення
+
+		myOverlay.id = 'overlay';
+
+	Тепер додаємо його в поточний документ
+
+		document.body.appendChild(myOverlay);
+
+			Це призведе до того, що при кліку на зображення до кінця тегу body додастся оверлей
+
+
+	Додаємо декілька стилів для оверлея
+
+		myOverlay.style.position = 'absolute';
+		myOverlay.style.top = 0;
+		myOverlay.style.backgroundColor = 'rgba(0,0,0,0.7)';
+		myOverlay.style.cursor = 'pointer';
+
+
+	Тепер потрібно правильно його розмістити
+
+		myOverlay.style.width = window.innerWidth + 'px';
+
+			Внутрішня ширина вікна
+
+		myOverlay.style.height = window.innerHeight + 'px';
+
+			Внутрішня висота вікна
+
+		myOverlay.style.top = window.pageYOffset + 'px';
+		myOverlay.style.left = window.pageXOffset + 'px';
+
+			Співпадіння оверлея з позицією вікна
+
+				(а не вгорі без цих двох рядків,
+				відповідно додаємо відступи зверху і зліва)
+
+
+3. Додавання зображення поверх оверлея.
+
+	Для того, щоб це зробити, треба визначити, де знаходиться наше зображення
+
+	Великі зображення робіт знаходяться у тий самій папці, де і зображення блоку
+
+	Зберігаємо джерело або розташування поточного об'єкту у змінній
+
+		var imageSrc = e.target.src;
+
+	Тепер створюємо іншу змінну, у якій буде новий елемент, що буде створено
+
+		var largeImage = document.createElement('img');
+
+	Присвоюємо id
+
+		largeImage.id = 'largeImage';
+
+	Треба присвоїти в джерело новий елемент зображення, що дорівнює старому джерелу зображення з методом substr, що бере рядок і повертає його частину
+
+		largeImage.src = imageSrc.substr(0, imageSrc.length-7) + '.jpg';
+
+
+	Змінюємо стиль зображення
+
+		largeImage.style.display = 'block';
+		largeImage.style.position = 'absolute';
+
+	І додаємо нове зображення до оверлея
+
+		myOverlay.appendChild(largeImage);
+
+		Поки що на даному етапі воно не відцентроване і велике, але воно виводиться на екран при кліку
+
+
+4. Зміна розміру зображення в DOM.
+
+	Підгонимо розміри зображення до розмірів поточного вікна
+
+	Проблема в тому, що це не можна зробити до остаточного завантаження зображення
+
+	Треба створити обробник, що буде обраховувати момент завантаження зображення, а потім обраховує його розміри
+
+	Треба встановити у якості об'єкту зображення і прив'язати до нього обробник подій
+
+		largeImage.addEventListener("load", function() {
+			// Код
+		}, false); // image has loaded
+
+	Будемо шукати подію load, а після викликати функцію, після завантаження зображення
+
+
+	Все, що потрібно, перевірити, чи є зображення високим чи широким
+
+	Перевірити, чи перевищує воно внутрішню висоту вікна, і якщо це так, то треба обрахувати співвідношення
+
+		if (this.height > window.innerHeight) {
+			this.ratio = window.innerHeight / this.height;
+			this.height = this.height * this.ratio;
+			this.width = this.width * this.ratio;
+		}
+
+	Аналогічно для ширини
+
+		if (this.width > window.innerWidth) {
+			this.ratio = window.innerWidth / this.width;
+			this.height = this.height * this.ratio;
+			this.width = this.width * this.ratio;
+		}
+
+
+5. Центрування зображення.
+
+	Створимо нову функцію і розташуємо її перед закриттям функції, що сама запускається
+
+	Функція буде очікувати зображення, що їй передається
+
+		function centerImage(theImage) {
+			var myDifX = (window.innerWidth - theImage.width)/2;
+			var myDifY = (window.innerHeight - theImage.height)/2;
+
+			theImage.style.top = myDifY + 'px';
+			theImage.style.left = myDifX + 'px';
+
+			return theImage;
+		}
+
+	Але ще треба цю функцію викликати, додаємо
+
+		centerImage(this);
+
+		Перед
+
+			myOverlay.appendChild(largeImage);
+
+
+6. Обробка кліків.
+
+	На великих зображеннях, щоб вони зникали і нормально було видно екран
+
+		largeImage.addEventListener('click', function() {
+			if (myOverlay) {
+				myOverlay.parentNode.removeChild(myOverlay);
+			}
+		}, false);
+
+		.removeChild не впливає на сам вузол, лише при вказанні батьківського вузла (!)
+
+
+7. Налаштування скролінгу.
+
+	Залишилась проблема - оверлей не переміщується при прокручуванні
+
+	Тому виправляємо це
+
+		window.addEventListener('scroll', function() {
+			if (myOverlay) {
+				myOverlay.style.top = window.pageYOffset + 'px';
+				myOverlay.style.left = window.pageXOffset + 'px';
+			}
+		}, false);
+
+
+8. Виявлення зміни розмірів вікна.
+
+	Залишилась ще одна проблема - оверлей не розширюється на весь екран при його динамічній зміні
+
+	Тому виправляємо це
+
+		window.addEventListener('resize', function() {
+			if (myOverlay) {
+				myOverlay.style.width = window.innerWidth + 'px';
+				myOverlay.style.height = window.innerHeight + 'px';
+				myOverlay.style.top = window.pageYOffset + 'px';
+				myOverlay.style.left = window.pageXOffset + 'px';
+
+				centerImage(largeImage);
+			}
+		}, false);
+
+
+	Треба почистити ще один момент
+
+		if (myOverlay) {
+			window.removeEventListener('resize', window, false);
+			window.removeEventListener('scroll', window, false);
+		}
+
+		Коли видаляється оверлей, треба переконатись, що у вікні більше не відслідковуються події, що були створені
+		
+		Це потрібно, щоб під час прокрутки тексту не спрацьовували ті ж самі події
+
+
+9. Створення простого слайдера.
+
+	Головна перевага слайд шоу без будь-яких бібліотек в їх продуктивності через маленьку кількість коду
+
+	Такі слайд шоу можна використовувати де завгодно і не хвилюватись, чи підключені зовнішні файли
+
+
+	9.1. Базова частина.
+
+		Файл index.html
+
+			<!DOCTYPE html>
+			<html lang="en">
+				<head>
+					<meta charset="UTF-8">
+					<title>Простий слайдер</title>
+					<link rel="stylesheet" href="style.css">
+				</head>
+
+				<body>
+					<ul id="slides">
+						<li class="slide showing">Slide 1</li>
+						<li class="slide">Slide 2</li>
+						<li class="slide">Slide 3</li>
+						<li class="slide">Slide 4</li>
+						<li class="slide">Slide 5</li>
+					</ul>
+
+					<script src="scripts.js"></script>
+				</body>
+			</html>
+
+
+		Файл style.css
+
+			#slides {
+				margin: 0px;
+				padding: 0px;
+				height: 300px;
+				position: relative;
+				list-style-type: none;
+			}
+			.slide {
+				top: 0px;
+				left: 0px;
+				opacity: 0;
+				z-index: 1;
+				width: 100%;
+				height: 100%;
+				position: absolute;
+
+				-webkit-transition: opacity 1s;
+				-moz-transition: opacity 1s;
+				-o-transition: opacity 1s;
+				transition: opacity 1s;
+			}
+			.showing {
+				opacity: 1;
+				z-index: 2;
+			}
+
+			.slide {
+				color: #fff;
+				padding: 40px;
+				font-size: 40px;
+				background: #333;
+				box-sizing: border-box;
+			}
+			.slide:nth-of-type(1) {
+				background: red;
+			}
+			.slide:nth-of-type(2) {
+				background: orange;
+			}
+			.slide:nth-of-type(3) {
+				background: green;
+			}
+			.slide:nth-of-type(4) {
+				background: blue;
+			}
+			.slide:nth-of-type(5) {
+				background: purple;
+			}
+
+
+		Файл scripts.js
+
+			JS виконує одну задачу: ховає поточний слайд і показує наступний
+
+			Для цього буде потрібно змінити назви класів слайдів
+
+				var slides = document.querySelectorAll('#slides .slide');
+				var currentSlide = 0;
+				var slideInterval = setInterval(nextSlide,2000);
+
+				function nextSlide() {
+					slides[currentSlide].className = 'slide';
+					currentSlide = (currentSlide+1)%slides.length;
+					slides[currentSlide].className = 'slide showing';
+				}
+
+				Що відбувається
+
+					За допомогою querySelectorAll отримуємо всі слайди з контейнера
+
+					Потім створюємо змінну для отримання поточного слайда
+
+					В кінці задаємо інтервал в дві секунди для наступного слайда (2000ms)
+
+				Детальніше розберемо функцію nextSlide
+
+					Міняємо клас для поточного слайда, щоб заховати його
+
+						(властивість transition автоматично обробляє плавне загасання)
+
+					Потім додаємо клас до поточного слайда
+
+					При цьому використовуємо оператор % на випадок, якщо це був останній слайд, щоб повернутися до першого
+
+						(Даний оператор відмінно підходить у випадках, коли необхідно виконувати математичні операції з циклами типу годин або календаря
+
+						У нашому випадку 5 слайдів
+
+						Порахуємо всі числа
+
+							1 % 5 = 1, 2 % 5 = 2, 3 % 5 = 3, 4 % 5 = 4, і 5 % 5 = 0)
+
+					Після отримання індексу слайда змінюємо клас і показуємо новий
+
+						(і знову прозорість обробляється властивістю transition)
+
+
+	9.2. Додавання кнопки паузи.
+
+		Додаємо у файл index.html
+
+			<button class="controls" id="pause">Pause</button>
+
+		Додаємо у файл scripts.js
+
+			var playing = true;
+			var pauseButton = document.getElementById('pause');
+
+			function pauseSlideshow() {
+				pauseButton.innerHTML = 'Play';
+				playing = false;
+				clearInterval(slideInterval);
+			}
+
+			function playSlideshow() {
+				pauseButton.innerHTML = 'Pause';
+				playing = true;
+				slideInterval = setInterval(nextSlide,2000);
+			}
+
+			pauseButton.onclick = function() {
+				if(playing) {
+					pauseSlideshow();
+				} else {
+					playSlideshow();
+				}
+			};
+
+			Що відбувається
+
+				Змінна playing зберігається в моменти, коли слайдер активний
+
+				Кнопка паузи занесена в змінну pauseButton, щоб потім не шукати її по документу
+
+				Функція pauseSlideshow зупиняє слайдер, а в кнопку паузи записує Play
+
+				Функція playSlideshow запускає слайдер, а в кнопку Play записує Pause
+
+				В кінці вішається обробник кліка, щоб кнопка play / pause могла ставити слайдер на паузу і запускати його
+
+
+	9.3. Додавання кнопок наступний і попередній.
+
+		Додаємо у файл index.html
+
+			<button class="controls" id="previous">Previous</button>
+			<button class="controls" id="next">Next</button>
+
+		У файлі scripts.js
+
+			Змінюємо функцію
+
+				function nextSlide() {
+					slides[currentSlide].className = 'slide';
+					currentSlide = (currentSlide+1)%slides.length;
+					slides[currentSlide].className = 'slide showing';
+				}
+
+			На наступну
+
+				function nextSlide() {
+					goToSlide(currentSlide+1);
+				}
+
+				function previousSlide() {
+					goToSlide(currentSlide-1);
+				}
+
+				function goToSlide(n) {
+					slides[currentSlide].className = 'slide';
+					currentSlide = (n+slides.length)%slides.length;
+					slides[currentSlide].className = 'slide showing';
+				}
+
+				Для більшої гнучкості в скрипті була додана загальна функція goToSlide
+
+				Також щоб не отримати від'ємне значення, був змінений спосіб обчислення змінної currentSlide
+
+		Також у файл scripts.js для здійснення роботи кнопок додаємо
+
+			var next = document.getElementById('next');
+			var previous = document.getElementById('previous');
+
+			next.onclick = function() {
+				pauseSlideshow();
+				nextSlide();
+			};
+			previous.onclick = function() {
+				pauseSlideshow();
+				previousSlide();
+			};
+
+			Слід звернути увагу, щоб автопрогравання не завадило переключенню між слайдами, ставимо його на паузу, коли користувач клікає на кнопки Next і Previous
